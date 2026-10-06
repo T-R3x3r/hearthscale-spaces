@@ -1,0 +1,210 @@
+/* The Spaces view's own layout, over the kit the platform loads into the
+   view. Every colour, corner, type size and gap is a token. */
+
+html,
+body,
+.spaces-root,
+.spaces {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.spaces {
+  position: relative;
+}
+
+/* A Remix Icon takes the box of its font size, as a drawn mark does. */
+.spaces-icon {
+  display: block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+.hs-settings-search > .spaces-icon {
+  color: var(--dim);
+}
+
+.hs-shell :is(.hs-hovbox, .hs-hovbox-ink, .hs-hovink):active .spaces-icon {
+  transform: var(--press);
+  opacity: var(--press-fade);
+}
+
+/* A mark's tip shows under it. */
+.hs-tipwrap {
+  position: relative;
+}
+
+.spaces-tip {
+  position: absolute;
+  top: calc(100% + var(--gap-label));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The sidebar: the app's row, the search, the pages. */
+.spaces[data-wide='false'] > .spaces-side {
+  width: auto;
+  border-right: none;
+}
+
+.spaces-search {
+  flex: none;
+  padding: var(--gap-label) var(--sidebar-inset) var(--gap-row) 0;
+}
+
+.spaces-list > .hs-session-slot {
+  flex: none;
+}
+
+/* The page: its title and its words in one column. */
+.spaces-page {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden auto;
+}
+
+.spaces-back {
+  position: absolute;
+  top: var(--gap-row);
+  left: var(--gap-row);
+}
+
+.spaces-sheet {
+  box-sizing: border-box;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--gap-page);
+}
+
+.spaces-title {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 var(--gap-stack);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-app);
+  font-size: var(--fs-page-hero);
+  font-weight: var(--fw-strong);
+}
+
+.spaces-title::placeholder {
+  color: var(--dim);
+}
+
+.spaces-prose {
+  min-height: 50vh;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-app);
+  font-size: var(--fs-docs);
+  line-height: var(--lh-body);
+}
+
+.spaces-prose > :first-child {
+  margin-top: 0;
+}
+
+.spaces-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--dim);
+  pointer-events: none;
+}
+
+.spaces-prose :is(h1, h2, h3) {
+  margin: var(--gap-row) 0 var(--gap-stack);
+  font-weight: var(--fw-strong);
+}
+
+.spaces-prose h1 {
+  font-size: var(--fs-title);
+}
+
+.spaces-prose h2 {
+  font-size: var(--fs-lead);
+}
+
+.spaces-prose h3 {
+  font-size: var(--fs-md);
+}
+
+.spaces-prose :is(p, ul, ol, blockquote, pre) {
+  margin: 0 0 var(--gap-stack);
+}
+
+.spaces-prose a {
+  color: var(--accent);
+}
+
+.spaces-prose code {
+  padding: 0 var(--gap-inline);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+}
+
+.spaces-prose pre {
+  padding: var(--pad-card);
+  border-radius: var(--r-card);
+  background: var(--card);
+  overflow-x: auto;
+}
+
+.spaces-prose pre code {
+  padding: 0;
+  background: none;
+}
+
+.spaces-prose blockquote {
+  padding-left: var(--gap-row);
+  border-left: calc(var(--bw) * 3) solid var(--line);
+  color: var(--mut);
+}
+
+.spaces-prose hr {
+  border: none;
+  border-top: var(--bw) solid var(--line);
+  margin: var(--gap-stack) 0;
+}
+
+.spaces-prose ul[data-type='taskList'] {
+  padding-left: 0;
+  list-style: none;
+}
+
+.spaces-prose ul[data-type='taskList'] li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap-inline);
+}
+
+.spaces-prose ul[data-type='taskList'] li > label {
+  flex: none;
+}
+
+.spaces-prose ul[data-type='taskList'] li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.spaces-prose ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--mut);
+  text-decoration: line-through;
+}
+
+.spaces-prose input[type='checkbox'] {
+  accent-color: var(--accent);
+}
