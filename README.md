@@ -1,9 +1,9 @@
 # Spaces
 
 Pages you write, in a Hearthscale tab: headings, lists, checklists, quotes
-and code, typed as you would in Markdown, kept on this computer. Search
-finds a page by its words, and by what it means when an embedding model is
-set.
+and code, typed as you would in Markdown, kept on this computer. Share a
+page with someone on another computer and write it together. Search finds
+a page by its words, and by what it means when an embedding model is set.
 
 Spaces is an ordinary Hearthscale app. Nothing in the platform knows its
 name; it installs from the Marketplace like any other app.
@@ -11,10 +11,11 @@ name; it installs from the Marketplace like any other app.
 ## The view
 
 Spaces shows one view, `spaces`, which fills its tab: the pages in a
-sidebar with New page and the search, and the open page beside them. A
-narrow tab shows the list or the page. Its source is React under `ui/src`,
-drawn with the `hs-*` classes and `ri-*` icons of the kit that Hearthscale
-loads into every view, with a [Tiptap](https://tiptap.dev) editor (MIT).
+sidebar with New page, Join a shared page and the search, and the open
+page beside them, with its Share. A narrow tab shows the list or the page.
+Its source is React under `ui/src`, drawn with the `hs-*` classes and
+`ri-*` icons of the kit that Hearthscale loads into every view, with a
+[Tiptap](https://tiptap.dev) editor (MIT).
 Its build writes `views/spaces.js`, the one file the package carries for
 it, so the file is committed with every change to the source:
 
@@ -28,9 +29,29 @@ pnpm build
 
 In the app's store, through the `store` extension: the list under
 `pages`, the last changed first, each page's document and plain text under
-`page:<id>`, and the page open last under `open`. A change is kept half a
-second after the typing stops. Spaces has no backend and reaches no
-network.
+`page:<id>`, a shared page's Yjs state under `shared:<id>`, and the page
+open last under `open`. A change is kept half a second after the typing
+stops. Spaces has no backend and reaches no network.
+
+## Sharing a page
+
+Through the `peers` extension. Share opens a room for the open page and
+shows its ticket, a `hearthscale://join` link, with Copy link (the
+`clipboard-write` permission). The other person opens the link, or presses
+Join a shared page and pastes it; Hearthscale asks them to join in a sheet
+of its own, so Spaces never picks a room. The page then comes into their
+own Spaces, and both write it at the same time.
+
+A shared page's title and words live in a [Yjs](https://yjs.dev) document
+(MIT), bound to the editor by Tiptap's collaboration extension. Each change
+goes to the room as a Yjs update. A computer that comes into the room, or
+comes back after its connection dropped or Hearthscale started again,
+sends the state it holds, and the others answer with what it lacks, so no
+change is lost while it was away. A room message is at most 64 KiB, so a
+longer one goes in parts.
+
+Stop sharing ends the room for everyone; Leave takes this computer out.
+When the room ends, each computer keeps its copy as an ordinary page.
 
 ## The search
 

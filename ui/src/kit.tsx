@@ -136,3 +136,71 @@ export function Confirm({
     </div>
   );
 }
+
+/** The sheet of a shared page: its link, which the person copies and
+ *  passes on, and the press that ends the page's sharing on this
+ *  computer; Escape and a press outside it close it. */
+export function ShareSheet({
+  title,
+  link,
+  end,
+  onEnd,
+  onClose,
+}: {
+  title: string;
+  link: string;
+  end: string;
+  onEnd: () => void;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      onClose();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [onClose]);
+  const button = (label: string, onClick: () => void, strong: boolean) => (
+    <span
+      role="button"
+      tabIndex={0}
+      className={`hs-glassbtn hs-inktext hs-sheet-button${strong ? ' hs-hovink' : ''}`}
+      data-strong={strong ? 'true' : 'false'}
+      onClick={onClick}
+    >
+      {label}
+    </span>
+  );
+  return (
+    <div
+      className="hs-sheet-shell"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      <div className="hs-sheet-box" role="dialog" onClick={(e) => e.stopPropagation()}>
+        <span className="hs-sheet-title">{title}</span>
+        <textarea
+          className="hs-ta hs-sheet-input spaces-link"
+          aria-label="Link"
+          readOnly
+          rows={4}
+          value={link}
+          onFocus={(e) => e.currentTarget.select()}
+        />
+        <div className="hs-sheet-footer">
+          {button(end, onEnd, false)}
+          {button(
+            copied ? 'Copied' : 'Copy link',
+            () => void navigator.clipboard.writeText(link).then(() => setCopied(true)),
+            true,
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

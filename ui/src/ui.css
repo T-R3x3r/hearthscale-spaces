@@ -208,3 +208,22 @@ body,
 .spaces-prose input[type='checkbox'] {
   accent-color: var(--accent);
 }
+
+/* The page's Share mark, at the top right of the page. */
+.spaces-share {
+  position: absolute;
+  top: var(--gap-row);
+  right: var(--gap-row);
+  z-index: 1;
+}
+
+.spaces-share > .spaces-tip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+/* A room's link breaks anywhere, as it holds no spaces. */
+.spaces-link {
+  word-break: break-all;
+}

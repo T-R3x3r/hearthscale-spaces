@@ -2,18 +2,19 @@
   "$schema": "https://hearthscale.com/app.schema.json",
   "id": "spaces",
   "name": "Spaces",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "api": 6,
   "icon": {
     "light": "assets/icon-light.svg",
     "dark": "assets/icon-dark.svg"
   },
-  "description": "Pages you write, kept on this computer: headings, lists, checklists, quotes and code, typed as you would in Markdown. Search finds a page by its words, and by what it means when an embedding model is set.",
+  "description": "Pages you write, kept on this computer: headings, lists, checklists, quotes and code, typed as you would in Markdown. Share a page with someone on another computer and write it together. Search finds a page by its words, and by what it means when an embedding model is set.",
   "license": "MIT",
   "categories": ["notes"],
   "payment": "free",
   "environment": { "kind": "process" },
-  "uses": ["store", "jobs"],
+  "uses": ["store", "jobs", "peers"],
+  "permissions": ["clipboard-write"],
   "models": { "embedding": { "required": false } },
   "surfaces": [
     {
