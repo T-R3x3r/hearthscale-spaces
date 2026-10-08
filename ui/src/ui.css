@@ -144,8 +144,25 @@ body,
   margin: 0 0 var(--gap-stack);
 }
 
+/* The kit's base resets lists, so a page draws its own marks. */
+.spaces-prose :is(ul, ol) {
+  padding-left: var(--gap-row);
+}
+
+.spaces-prose ul {
+  list-style: disc;
+}
+
+.spaces-prose ol {
+  list-style: decimal;
+}
+
+.spaces-prose li::marker {
+  color: var(--mut);
+}
+
 .spaces-prose a {
-  color: var(--accent);
+  color: var(--link);
 }
 
 .spaces-prose code {
