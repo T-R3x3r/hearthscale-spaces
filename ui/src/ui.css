@@ -175,7 +175,7 @@ body,
   border-radius: var(--r-sm);
   background: var(--card);
   font-family: var(--font-mono);
-  font-size: var(--fs-code);
+  font-size: var(--fs-docs-code);
 }
 
 .spaces-prose pre {
