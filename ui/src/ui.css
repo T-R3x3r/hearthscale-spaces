@@ -27,7 +27,12 @@ body,
   color: var(--dim);
 }
 
-.hs-shell :is(.hs-hovbox, .hs-hovbox-ink, .hs-hovink):active .spaces-icon {
+.hs-empty-view > .spaces-icon {
+  color: var(--dim);
+  margin-bottom: var(--space);
+}
+
+.hs-shell :is(.hs-hovbox, .hs-hovbox-ink, .hs-hovink, .hs-button):active .spaces-icon {
   transform: var(--press);
   opacity: var(--press-fade);
 }

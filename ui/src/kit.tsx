@@ -52,6 +52,24 @@ export function MarkPress({
   );
 }
 
+/** A text button with a mark before its words. */
+export function Button({
+  icon,
+  onPress,
+  children,
+}: {
+  icon: string;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button type="button" className="hs-button" data-variant="secondary" data-size="sm" onClick={onPress}>
+      <Icon name={icon} size={14} />
+      {children}
+    </button>
+  );
+}
+
 /** The search field whose placeholder sits centred and slides left on
  *  focus. */
 export function SettingsSearch({

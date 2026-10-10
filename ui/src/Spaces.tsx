@@ -1,13 +1,14 @@
 /**
  * The Spaces view, which fills the app's tab: the pages in a sidebar at
  * the left, with New page, Join a shared page and the search, and the
- * open page beside it, with its Share. A change is kept a moment after the
+ * open page beside it, with its Share; with no page open, New page in its
+ * place. A change is kept a moment after the
  * typing stops, and the page moves to the top of the list. A narrow tab
  * shows the list or the page, with a way back to the list.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PageEditor, SharedEditor } from './Editor.tsx';
-import { Confirm, Icon, MarkPress, SettingsSearch, ShareSheet } from './kit.tsx';
+import { Button, Confirm, Icon, MarkPress, SettingsSearch, ShareSheet } from './kit.tsx';
 import { EMPTY, newId, type PageBody, type PageEntry, type Pages } from './pages.ts';
 import type { Room } from './platform.ts';
 import type { Search } from './search.ts';
@@ -48,13 +49,10 @@ export function Spaces({
   pages: Pages;
   search: Search;
   shared: Shared;
-  first: { entries: PageEntry[]; open: PageEntry; body: PageBody };
+  first: { entries: PageEntry[]; open: { entry: PageEntry; body: PageBody } | null };
 }) {
   const [entries, setEntries] = useState(first.entries);
-  const [open, setOpen] = useState<{ entry: PageEntry; body: PageBody }>({
-    entry: first.open,
-    body: first.body,
-  });
+  const [open, setOpen] = useState<{ entry: PageEntry; body: PageBody } | null>(first.open);
   const [query, setQuery] = useState('');
   const [found, setFound] = useState<{ ids: string[]; meaning: boolean } | null>(null);
   const [deleting, setDeleting] = useState<PageEntry | null>(null);
@@ -93,6 +91,7 @@ export function Spaces({
   }, [pages, search, allPages]);
 
   const change = (next: { title?: string; body?: PageBody }) => {
+    if (!open) return;
     const held = pending.current;
     const entry: PageEntry = {
       id: open.entry.id,
@@ -101,7 +100,7 @@ export function Spaces({
     };
     const body = next.body ?? held?.body ?? null;
     pending.current = { entry, body };
-    setOpen((o) => ({ entry, body: body ?? o.body }));
+    setOpen((o) => o && { entry, body: body ?? o.body });
     clearTimeout(keepTimer.current);
     keepTimer.current = window.setTimeout(() => void keep(), KEEP_MS);
   };
@@ -129,19 +128,19 @@ export function Spaces({
     }
     const list = await pages.remove(entry.id);
     setEntries(list);
-    if (open.entry.id !== entry.id) return;
+    if (open?.entry.id !== entry.id) return;
     const next = list[0];
     if (next) await show(next);
-    else await create();
+    else setOpen(null);
   };
 
-  const openId = useRef(open.entry.id);
-  openId.current = open.entry.id;
+  const openId = useRef(open?.entry.id ?? null);
+  openId.current = open?.entry.id ?? null;
   useEffect(() => {
     shared.listen({
       saved: (list, entry) => {
         setEntries(list);
-        setOpen((o) => (o.entry.id === entry.id ? { ...o, entry } : o));
+        setOpen((o) => (o?.entry.id === entry.id ? { ...o, entry } : o));
       },
       arrived: (entry) => void show(entry),
       unshared: (list, id) => {
@@ -156,13 +155,14 @@ export function Spaces({
   });
 
   const share = async () => {
+    if (!open) return;
     if (open.entry.room) {
       setSharing(true);
       return;
     }
     await keep();
     const entry = await shared.share(open.entry, open.body);
-    setOpen((o) => ({ ...o, entry }));
+    setOpen((o) => o && { ...o, entry });
     setSharing(true);
   };
 
@@ -203,8 +203,8 @@ export function Spaces({
     };
   }, [query, pages, search, keep, allPages]);
 
-  const sharedDoc = open.entry.room ? shared.doc(open.entry.id) : null;
-  const sharingRoom = shared.room(open.entry.room);
+  const sharedDoc = open?.entry.room ? shared.doc(open.entry.id) : null;
+  const sharingRoom = shared.room(open?.entry.room);
   const byId = new Map(entries.map((e) => [e.id, e]));
   const rows = found ? found.ids.flatMap((id) => byId.get(id) ?? []) : entries;
   const sideShown = wide || listShown;
@@ -250,7 +250,7 @@ export function Spaces({
               <div key={entry.id} className="hs-session-slot">
                 <div
                   className={`hs-sessrow hs-hovbox-ink hs-inkmut hs-session-row${
-                    entry.id === open.entry.id ? ' hs-boxsel' : ''
+                    entry.id === open?.entry.id ? ' hs-boxsel' : ''
                   }`}
                   data-page={entry.id}
                   onClick={() => void show(entry)}
@@ -259,7 +259,7 @@ export function Spaces({
                     <Icon name={entry.room ? 'group-line' : 'file-text-line'} size={15} />
                   </span>
                   <span className="hs-stitle hs-session-label">
-                    {(entry.id === open.entry.id ? open.entry.title : entry.title) || 'Untitled'}
+                    {(entry.id === open?.entry.id ? open.entry.title : entry.title) || 'Untitled'}
                   </span>
                   <span className="hs-rowact hs-session-actions">
                     <MarkPress
@@ -287,34 +287,45 @@ export function Spaces({
               <Icon name="arrow-left-line" size={16} />
             </MarkPress>
           )}
-          <MarkPress
-            label={shareLabel(shared.room(open.entry.room))}
-            className="hs-hovink hs-inkmut hs-sidebar-rowact spaces-share"
-            onPress={() => void share()}
-          >
-            <Icon name={open.entry.room ? 'group-line' : 'share-line'} size={16} />
-          </MarkPress>
-          {sharedDoc ? (
-            <SharedEditor
-              key={`${open.entry.id}:${open.entry.room}`}
-              doc={sharedDoc}
-              onTitle={(title) => {
-                setOpen((o) => ({ ...o, entry: { ...o.entry, title } }));
-                shared.setTitle(open.entry.id, title);
-              }}
-            />
+          {open ? (
+            <>
+              <MarkPress
+                label={shareLabel(shared.room(open.entry.room))}
+                className="hs-hovink hs-inkmut hs-sidebar-rowact spaces-share"
+                onPress={() => void share()}
+              >
+                <Icon name={open.entry.room ? 'group-line' : 'share-line'} size={16} />
+              </MarkPress>
+              {sharedDoc ? (
+                <SharedEditor
+                  key={`${open.entry.id}:${open.entry.room}`}
+                  doc={sharedDoc}
+                  onTitle={(title) => {
+                    setOpen((o) => o && { ...o, entry: { ...o.entry, title } });
+                    shared.setTitle(open.entry.id, title);
+                  }}
+                />
+              ) : (
+                <PageEditor
+                  key={open.entry.id}
+                  title={open.entry.title}
+                  body={open.body}
+                  onTitle={(title) => change({ title })}
+                  onBody={(body) => change({ body })}
+                />
+              )}
+            </>
           ) : (
-            <PageEditor
-              key={open.entry.id}
-              title={open.entry.title}
-              body={open.body}
-              onTitle={(title) => change({ title })}
-              onBody={(body) => change({ body })}
-            />
+            <div className="hs-empty-view">
+              <Icon name="booklet-line" size={30} />
+              <Button icon="add-line" onPress={() => void create()}>
+                New page
+              </Button>
+            </div>
           )}
         </main>
       )}
-      {sharing && sharingRoom && (
+      {open && sharing && sharingRoom && (
         <ShareSheet
           title={`Share “${open.entry.title || 'Untitled'}”`}
           link={sharingRoom.ticket}
