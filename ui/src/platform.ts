@@ -38,6 +38,7 @@ interface Heard {
   'hearthscale/peers/message': { room: string; from: string; data: unknown };
   'hearthscale/peers/changed': { room: Room };
   'hearthscale/peers/ended': { room: string };
+  'hearthscale/ui/history': { direction: 'back' | 'forward' };
 }
 
 /** How often a running job is asked where it stands. */

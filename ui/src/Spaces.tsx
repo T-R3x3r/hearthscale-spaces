@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { PageEditor, SharedEditor } from './Editor.tsx';
 import { Button, Confirm, Icon, MarkPress, SettingsSearch, ShareSheet } from './kit.tsx';
 import { EMPTY, newId, type PageBody, type PageEntry, type Pages } from './pages.ts';
-import type { Room } from './platform.ts';
+import type { Platform, Room } from './platform.ts';
 import type { Search } from './search.ts';
 import type { Shared } from './shared.ts';
 
@@ -41,11 +41,13 @@ function shareLabel(room: Room | null): string {
 }
 
 export function Spaces({
+  platform,
   pages,
   search,
   shared,
   first,
 }: {
+  platform: Platform;
   pages: Pages;
   search: Search;
   shared: Shared;
@@ -67,6 +69,10 @@ export function Spaces({
   const indexTimer = useRef<number>(0);
   /** Whether the app had an embedding model at the last try. */
   const meaning = useRef<boolean | null>(null);
+  /** The page the last move went to, set as the move starts: a step pressed
+   *  while a page still loads moves on from that page. */
+  const place = useRef(first.open?.entry.id ?? null);
+  const places = useRef<{ back: string[]; forward: string[] }>({ back: [], forward: [] });
 
   const allPages = useCallback(
     async (list: PageEntry[]) =>
@@ -106,17 +112,46 @@ export function Spaces({
   };
 
   const show = async (entry: PageEntry, body?: PageBody) => {
+    place.current = entry.id;
     await keep();
-    setOpen({ entry, body: body ?? (await pages.body(entry.id)) });
+    const words = body ?? (await pages.body(entry.id));
+    if (place.current !== entry.id) return;
+    setOpen({ entry, body: words });
     setListShown(false);
     await pages.keepOpen(entry.id);
   };
+
+  const go = (entry: PageEntry, body?: PageBody) => {
+    if (place.current && place.current !== entry.id) {
+      places.current.back.push(place.current);
+      places.current.forward = [];
+    }
+    return show(entry, body);
+  };
+
+  const walk = (direction: 'back' | 'forward') => {
+    if (sharing || deleting) return;
+    const other = direction === 'back' ? 'forward' : 'back';
+    const { current } = places;
+    for (let id = current[direction].pop(); id; id = current[direction].pop()) {
+      const entry = entries.find((e) => e.id === id);
+      if (!entry || id === place.current) continue;
+      if (place.current) current[other].push(place.current);
+      void show(entry);
+      return;
+    }
+  };
+  const walkNow = useRef(walk);
+  walkNow.current = walk;
+  useEffect(() => {
+    platform.on('hearthscale/ui/history', ({ direction }) => walkNow.current(direction));
+  }, [platform]);
 
   const create = async () => {
     const entry: PageEntry = { id: newId(), title: '', updated: new Date().toISOString() };
     await keep();
     setEntries(await pages.save(entry, EMPTY));
-    await show(entry, EMPTY);
+    await go(entry, EMPTY);
   };
 
   const remove = async (entry: PageEntry) => {
@@ -131,7 +166,10 @@ export function Spaces({
     if (open?.entry.id !== entry.id) return;
     const next = list[0];
     if (next) await show(next);
-    else setOpen(null);
+    else {
+      place.current = null;
+      setOpen(null);
+    }
   };
 
   const openId = useRef(open?.entry.id ?? null);
@@ -142,7 +180,7 @@ export function Spaces({
         setEntries(list);
         setOpen((o) => (o?.entry.id === entry.id ? { ...o, entry } : o));
       },
-      arrived: (entry) => void show(entry),
+      arrived: (entry) => void go(entry),
       unshared: (list, id) => {
         setEntries(list);
         if (openId.current !== id) return;
@@ -253,7 +291,7 @@ export function Spaces({
                     entry.id === open?.entry.id ? ' hs-boxsel' : ''
                   }`}
                   data-page={entry.id}
-                  onClick={() => void show(entry)}
+                  onClick={() => void go(entry)}
                 >
                   <span className="hs-session-mark">
                     <Icon name={entry.room ? 'group-line' : 'file-text-line'} size={15} />
