@@ -34,7 +34,7 @@ function shareLabel(room: Room | null): string {
   if (!room) return 'Share page';
   if (room.peers.length > 0) {
     const others =
-      room.peers.length === 1 ? '1 other computer' : `${room.peers.length} other computers`;
+      room.peers.length === 1 ? '1 other device' : `${room.peers.length} other devices`;
     return `Shared with ${others}`;
   }
   return room.opener === room.me ? 'Shared with no one yet' : 'Joining again';

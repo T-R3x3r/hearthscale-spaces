@@ -16,7 +16,7 @@ const style = document.createElement('style');
 style.textContent = sheet;
 document.head.append(style);
 
-const app = new App({ name: 'Spaces', version: '1.1.3' }, {}, { autoResize: false });
+const app = new App({ name: 'Spaces', version: '1.1.4' }, {}, { autoResize: false });
 await app.connect(new PostMessageTransport(window.parent, window.parent));
 const platform = new Platform(app);
 const pages = new Pages(platform);
